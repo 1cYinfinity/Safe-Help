@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafeHelp — Admin Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Syne:wght@700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030508;--bg2:#060d14;--sidebar:#040a10;--card:#081018;--card2:#0b1520;
+  --green:#00ff88;--cyan:#22d3ee;--red:#f43f5e;--amber:#f59e0b;--purple:#a78bfa;
+  --text:#cde8f0;--muted:#3d6070;--dim:#142030;--sub:#1c3245;
+  --border:rgba(0,255,136,.1);--border2:rgba(34,211,238,.1);
+  --glow-g:0 0 24px rgba(0,255,136,.15);
+  --glow-c:0 0 24px rgba(34,211,238,.15);
+  --fm:'JetBrains Mono',monospace;--fh:'Syne',sans-serif;--fb:'Nunito',sans-serif;
+  --sb:260px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{height:100%;}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--fb);
+  height:100%;display:flex;flex-direction:column;overflow-x:hidden;
+  font-size:14px;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 50% 60% at 0% 0%,rgba(0,255,136,.04) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 50% at 100% 100%,rgba(34,211,238,.03) 0%,transparent 60%);
+}
+
+/* ══ TOPBAR ══ */
+.topbar{
+  position:fixed;top:0;left:0;right:0;height:52px;z-index:200;
+  background:rgba(4,10,16,.97);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:14px;
+}
+.tb-logo{display:flex;align-items:center;gap:9px;margin-right:10px;}
+.tb-logo-icon{
+  width:30px;height:30px;border-radius:7px;
+  background:linear-gradient(135deg,rgba(0,255,136,.2),rgba(34,211,238,.15));
+  border:1px solid rgba(0,255,136,.25);
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;
+  box-shadow:var(--glow-g);
+}
+.tb-logo-txt{font-family:var(--fh);font-size:1.05rem;font-weight:800;letter-spacing:2px;color:var(--green);}
+.tb-divider{width:1px;height:24px;background:var(--dim);}
+.tb-badge{
+  font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;
+  color:var(--muted);background:rgba(0,255,136,.04);
+  border:1px solid rgba(0,255,136,.08);
+  border-radius:4px;padding:3px 10px;
+}
+.tb-status{display:flex;align-items:center;gap:6px;font-family:var(--fm);font-size:.68rem;color:var(--muted);}
+.tb-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,255,136,.4);}50%{opacity:.7;box-shadow:0 0 0 5px rgba(0,255,136,0);}}
+.tb-clock{font-family:var(--fm);font-size:.72rem;color:var(--cyan);}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.tb-btn{
+  background:transparent;border:1px solid var(--dim);color:var(--muted);
+  padding:6px 14px;border-radius:6px;font-size:.7rem;font-family:var(--fm);
+  letter-spacing:1px;cursor:pointer;transition:all .2s;text-decoration:none;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.tb-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.tb-btn.danger{border-color:rgba(244,63,94,.25);color:var(--red);}
+.tb-btn.danger:hover{background:rgba(244,63,94,.08);}
+.tb-admin{
+  font-family:var(--fm);font-size:.7rem;color:var(--green);
+  padding:5px 12px;border-radius:6px;
+  background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.15);
+}
+
+/* ══ LAYOUT ══ */
+.layout{display:flex;margin-top:52px;min-height:calc(100vh - 52px);}
+
+/* ══ SIDEBAR ══ */
+.sidebar{
+  width:var(--sb);flex-shrink:0;
+  background:var(--sidebar);border-right:1px solid var(--border);
+  padding:20px 0;
+  position:fixed;top:52px;left:0;bottom:0;
+  overflow-y:auto;z-index:100;
+  display:flex;flex-direction:column;
+}
+.sb-section{padding:0 16px;margin-bottom:6px;}
+.sb-label{font-family:var(--fm);font-size:.6rem;color:var(--muted);letter-spacing:2.5px;text-transform:uppercase;padding:10px 8px 6px;}
+.sb-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:8px;
+  cursor:pointer;transition:all .18s;margin-bottom:2px;
+  font-size:.85rem;font-weight:600;color:var(--muted);
+  position:relative;
+}
+.sb-item:hover{background:rgba(0,255,136,.05);color:var(--text);}
+.sb-item.active{background:rgba(0,255,136,.08);color:var(--green);border:1px solid rgba(0,255,136,.12);}
+.sb-item .si{font-size:1rem;width:20px;text-align:center;}
+.sb-badge{
+  margin-left:auto;background:var(--red);color:white;
+  border-radius:999px;padding:2px 8px;font-size:.62rem;
+  font-family:var(--fm);min-width:20px;text-align:center;
+}
+.sb-badge.cyan{background:var(--cyan);color:#030508;}
+.sb-badge.green{background:var(--green);color:#030508;}
+.sb-badge.amber{background:var(--amber);color:#030508;}
+
+.sb-divider{height:1px;background:var(--dim);margin:12px 16px;}
+
+.sb-footer{margin-top:auto;padding:16px;border-top:1px solid var(--dim);}
+.sb-footer-user{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:rgba(0,255,136,.04);border:1px solid rgba(0,255,136,.08);border-radius:8px;
+}
+.sb-avatar{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,var(--green),var(--cyan));
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#030508;font-weight:800;flex-shrink:0;
+}
+.sb-uname{font-size:.8rem;font-weight:700;color:var(--green);}
+.sb-urole{font-size:.68rem;color:var(--muted);font-family:var(--fm);}
+
+/* ══ MAIN CONTENT ══ */
+.main{margin-left:var(--sb);flex:1;padding:24px;overflow-y:auto;}
+
+/* ══ VIEWS ══ */
+.view{display:none;}
+.view.active{display:block;}
+
+/* Page header */
+.ph{margin-bottom:22px;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.ph-left .ph-eyebrow{font-family:var(--fm);font-size:.65rem;color:var(--green);letter-spacing:2.5px;text-transform:uppercase;margin-bottom:4px;}
+.ph-title{font-family:var(--fh);font-size:1.6rem;font-weight:800;letter-spacing:1px;color:white;}
+.ph-sub{font-size:.82rem;color:var(--muted);margin-top:3px;font-family:var(--fm);}
+.ph-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.ph-btn{
+  background:transparent;border:1px solid var(--dim);color:var(--muted);
+  padding:8px 16px;border-radius:8px;font-size:.75rem;font-family:var(--fm);
+  letter-spacing:1px;cursor:pointer;transition:all .18s;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.ph-btn:hover{border-color:var(--cyan);color:var(--cyan);}
+.ph-btn.primary{background:rgba(0,255,136,.1);border-color:rgba(0,255,136,.25);color:var(--green);}
+.ph-btn.primary:hover{background:rgba(0,255,136,.18);}
+
+/* ══ STATS ══ */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:14px;margin-bottom:24px;}
+.stat{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:18px 20px;position:relative;overflow:hidden;
+  transition:transform .2s,box-shadow .2s;
+}
+.stat:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.4);}
+.stat::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--accent,var(--green));opacity:.5;
+}
+.stat .sn{font-family:var(--fh);font-size:2.2rem;font-weight:800;color:var(--accent,var(--green));line-height:1;}
+.stat .sl{font-family:var(--fm);font-size:.65rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:6px;}
+.stat .si-bg{position:absolute;right:16px;top:16px;font-size:1.8rem;opacity:.2;}
+.stat.red{--accent:var(--red);}
+.stat.cyan{--accent:var(--cyan);}
+.stat.amber{--accent:var(--amber);}
+.stat.purple{--accent:var(--purple);}
+
+/* ══ REPORTS TABLE ══ */
+.toolbar{
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px 12px 0 0;padding:14px 18px;
+  border-bottom:1px solid var(--border);
+}
+.fchip{
+  background:transparent;border:1px solid var(--dim);color:var(--muted);
+  padding:5px 14px;border-radius:999px;font-size:.72rem;font-family:var(--fm);
+  cursor:pointer;letter-spacing:1px;transition:all .18s;
+}
+.fchip:hover{border-color:var(--cyan);color:var(--cyan);}
+.fchip.on{border-color:var(--green);color:var(--green);background:rgba(0,255,136,.06);}
+.search-box{
+  margin-left:auto;
+  background:var(--bg2);border:1px solid var(--dim);
+  border-radius:8px;padding:7px 14px;
+  font-size:.82rem;color:var(--text);font-family:var(--fb);
+  outline:none;transition:border-color .2s;width:220px;
+}
+.search-box:focus{border-color:var(--cyan);}
+.search-box::placeholder{color:var(--muted);}
+
+/* Report card */
+.report-list{
+  background:var(--card);border:1px solid var(--border);
+  border-top:none;border-radius:0 0 12px 12px;
+  overflow:hidden;
+}
+.rc{
+  border-bottom:1px solid var(--dim);padding:18px 20px;
+  transition:background .15s;
+}
+.rc:last-child{border-bottom:none;}
+.rc:hover{background:rgba(0,255,136,.02);}
+
+.rc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.rc-badges{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.badge{
+  padding:2px 10px;border-radius:4px;
+  font-family:var(--fm);font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;
+  border:1px solid;
+}
+.b-ref{color:rgba(0,255,136,.7);border-color:rgba(0,255,136,.2);background:rgba(0,255,136,.04);}
+.b-cat{color:var(--cyan);border-color:rgba(34,211,238,.2);background:rgba(34,211,238,.05);}
+.b-new{color:var(--cyan);border-color:rgba(34,211,238,.25);background:rgba(34,211,238,.07);}
+.b-investigating{color:var(--amber);border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.07);}
+.b-resolved{color:var(--green);border-color:rgba(0,255,136,.25);background:rgba(0,255,136,.07);}
+.b-urg-low{color:var(--green);border-color:rgba(0,255,136,.2);background:rgba(0,255,136,.05);}
+.b-urg-medium{color:var(--amber);border-color:rgba(245,158,11,.2);background:rgba(245,158,11,.05);}
+.b-urg-high{color:var(--red);border-color:rgba(244,63,94,.3);background:rgba(244,63,94,.07);}
+.rc-time{font-family:var(--fm);font-size:.65rem;color:var(--muted);}
+
+.rc-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.ra{
+  padding:5px 12px;border-radius:5px;border:1px solid var(--dim);
+  background:transparent;font-size:.68rem;font-family:var(--fm);
+  cursor:pointer;letter-spacing:.5px;transition:all .18s;color:var(--muted);
+}
+.ra:hover{color:white;border-color:white;}
+.ra.inv{border-color:rgba(245,158,11,.25);color:var(--amber);}
+.ra.inv:hover{background:rgba(245,158,11,.08);}
+.ra.res{border-color:rgba(0,255,136,.25);color:var(--green);}
+.ra.res:hover{background:rgba(0,255,136,.08);}
+.ra.del{border-color:rgba(244,63,94,.25);color:var(--red);}
+.ra.del:hover{background:rgba(244,63,94,.08);}
+.ra.notes{border-color:rgba(34,211,238,.2);color:var(--cyan);}
+.ra.notes:hover{background:rgba(34,211,238,.08);}
+
+.rc-desc{
+  background:var(--bg2);border-radius:6px;padding:10px 14px;
+  font-size:.85rem;color:var(--text);line-height:1.65;
+  margin:8px 0 10px;border-left:2px solid rgba(0,255,136,.15);
+}
+.rc-meta-row{
+  display:flex;flex-wrap:wrap;gap:16px;font-family:var(--fm);font-size:.7rem;
+}
+.rm{display:flex;gap:5px;align-items:flex-start;}
+.rm-k{color:var(--cyan);}
+.rm-v{color:var(--muted);}
+
+.rc-notes-box{
+  background:rgba(34,211,238,.04);border:1px solid rgba(34,211,238,.12);
+  border-radius:6px;padding:10px 14px;margin-top:10px;
+  font-size:.82rem;color:var(--text);line-height:1.6;
+  display:none;
+}
+.rc-notes-box.show{display:block;}
+.rc-notes-input{
+  width:100%;background:transparent;border:none;
+  color:var(--text);font-family:var(--fb);font-size:.82rem;
+  outline:none;resize:none;min-height:60px;line-height:1.6;
+}
+.rc-notes-input::placeholder{color:var(--muted);}
+.rc-notes-save{
+  margin-top:8px;background:transparent;border:1px solid rgba(34,211,238,.2);
+  color:var(--cyan);padding:5px 14px;border-radius:5px;
+  font-size:.7rem;font-family:var(--fm);cursor:pointer;transition:all .18s;
+}
+.rc-notes-save:hover{background:rgba(34,211,238,.08);}
+
+/* Empty */
+.empty{
+  text-align:center;padding:60px 20px;
+  font-family:var(--fm);color:var(--muted);
+}
+.empty .ei{font-size:3rem;margin-bottom:14px;}
+.empty h3{font-family:var(--fh);font-size:1.4rem;letter-spacing:2px;margin-bottom:8px;}
+
+/* ══ SETTINGS VIEW ══ */
+.settings-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:24px;margin-bottom:16px;
+}
+.settings-card h3{font-family:var(--fh);font-size:1rem;letter-spacing:2px;color:var(--cyan);margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid var(--dim);}
+.setting-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 0;border-bottom:1px solid var(--dim);gap:20px;flex-wrap:wrap;
+}
+.setting-row:last-child{border-bottom:none;padding-bottom:0;}
+.sr-info .sr-title{font-size:.9rem;font-weight:700;color:var(--text);}
+.sr-info .sr-sub{font-size:.75rem;color:var(--muted);margin-top:2px;font-family:var(--fm);}
+.sr-right{display:flex;gap:8px;align-items:center;flex-shrink:0;}
+.setting-input{
+  background:var(--bg2);border:1px solid var(--dim);border-radius:6px;
+  padding:8px 12px;font-size:.85rem;color:var(--text);font-family:var(--fb);
+  outline:none;transition:border-color .2s;min-width:200px;
+}
+.setting-input:focus{border-color:var(--green);}
+.setting-input[type=password]{font-family:var(--fm);letter-spacing:2px;}
+.save-btn{
+  background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.25);
+  color:var(--green);padding:8px 18px;border-radius:6px;
+  font-size:.75rem;font-family:var(--fm);cursor:pointer;transition:all .2s;letter-spacing:1px;
+}
+.save-btn:hover{background:rgba(0,255,136,.18);}
+.danger-btn{
+  background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.25);
+  color:var(--red);padding:8px 18px;border-radius:6px;
+  font-size:.75rem;font-family:var(--fm);cursor:pointer;transition:all .2s;letter-spacing:1px;
+}
+.danger-btn:hover{background:rgba(244,63,94,.15);}
+.settings-msg{
+  font-family:var(--fm);font-size:.75rem;color:var(--green);
+  min-height:18px;margin-top:6px;
+}
+
+/* ══ ANALYTICS VIEW ══ */
+.analytics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;}
+.analytic-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;} 
+.analytic-card h4{font-family:var(--fm);font-size:.72rem;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.bar-lbl{font-size:.78rem;color:var(--muted);width:90px;flex-shrink:0;font-family:var(--fm);}
+.bar-track{flex:1;height:8px;background:var(--dim);border-radius:999px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:999px;background:var(--green);transition:width .6s ease;}
+.bar-fill.cyan{background:var(--cyan);}
+.bar-fill.amber{background:var(--amber);}
+.bar-fill.red{background:var(--red);}
+.bar-fill.purple{background:var(--purple);}
+.bar-num{font-family:var(--fm);font-size:.72rem;color:var(--text);width:24px;text-align:right;flex-shrink:0;}
+
+/* ══ TOAST ══ */
+#toast{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  background:var(--card2);border:1px solid var(--border);border-radius:8px;
+  padding:12px 20px;font-family:var(--fm);font-size:.8rem;color:var(--green);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;
+}
+#toast.show{transform:translateY(0);opacity:1;}
+
+/* ══ MODAL ══ */
+.modal-bg{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(3,5,8,.85);backdrop-filter:blur(6px);
+  align-items:center;justify-content:center;padding:20px;
+}
+.modal-bg.show{display:flex;}
+.modal{
+  background:var(--card);border:1px solid rgba(0,255,136,.15);
+  border-radius:12px;padding:28px;width:100%;max-width:480px;
+  position:relative;
+}
+.modal h3{font-family:var(--fh);font-size:1.2rem;letter-spacing:1px;margin-bottom:14px;color:white;}
+.modal p{font-size:.88rem;color:var(--muted);margin-bottom:20px;line-height:1.7;}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;}
+.modal-cancel{background:transparent;border:1px solid var(--dim);color:var(--muted);padding:9px 20px;border-radius:7px;font-size:.8rem;font-family:var(--fm);cursor:pointer;transition:all .2s;}
+.modal-cancel:hover{border-color:var(--text);color:var(--text);}
+.modal-confirm{background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.3);color:var(--red);padding:9px 20px;border-radius:7px;font-size:.8rem;font-family:var(--fm);cursor:pointer;transition:all .2s;}
+.modal-confirm:hover{background:rgba(244,63,94,.2);}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  :root{--sb:0px;}
+  .sidebar{display:none;}
+  .main{margin-left:0;}
+  .topbar .tb-badge,.topbar .tb-status,.topbar .tb-clock,.tb-divider{display:none;}
+}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- DELETE MODAL -->
+<div class="modal-bg" id="del-modal">
+  <div class="modal">
+    <h3>🗑️ Delete Report</h3>
+    <p>Are you sure you want to permanently delete this report? This action cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" id="modal-confirm-btn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-logo">
+    <div class="tb-logo-icon">🛡️</div>
+    <div class="tb-logo-txt">SAFEHELP</div>
+  </div>
+  <div class="tb-divider"></div>
+  <div class="tb-badge">ADMIN PANEL</div>
+  <div class="tb-status"><div class="tb-dot"></div>SYSTEM ONLINE</div>
+  <div class="tb-clock" id="tb-clock">00:00:00</div>
+  <div class="tb-right">
+    <a class="tb-btn" href="index.html" target="_blank">🌐 Public Site</a>
+    <button class="tb-btn" onclick="exportCSV()">📤 Export CSV</button>
+    <span class="tb-admin">👤 admin</span>
+    <button class="tb-btn danger" onclick="doLogout()">🚪 Logout</button>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-section">
+      <div class="sb-label">Navigation</div>
+      <div class="sb-item active" id="sb-reports" onclick="showView('reports')">
+        <span class="si">📋</span> All Reports
+        <span class="sb-badge" id="sb-total-badge">0</span>
+      </div>
+      <div class="sb-item" id="sb-high" onclick="showView('high')">
+        <span class="si">🔴</span> High Urgency
+        <span class="sb-badge" id="sb-high-badge">0</span>
+      </div>
+      <div class="sb-item" id="sb-new" onclick="showView('new')">
+        <span class="si">🆕</span> New Reports
+        <span class="sb-badge cyan" id="sb-new-badge">0</span>
+      </div>
+      <div class="sb-item" id="sb-investigating" onclick="showView('investigating')">
+        <span class="si">🔍</span> Investigating
+        <span class="sb-badge amber" id="sb-inv-badge">0</span>
+      </div>
+      <div class="sb-item" id="sb-resolved" onclick="showView('resolved')">
+        <span class="si">✅</span> Resolved
+        <span class="sb-badge green" id="sb-res-badge">0</span>
+      </div>
+    </div>
+    <div class="sb-divider"></div>
+    <div class="sb-section">
+      <div class="sb-label">Tools</div>
+      <div class="sb-item" id="sb-analytics" onclick="showView('analytics')">
+        <span class="si">📊</span> Analytics
+      </div>
+      <div class="sb-item" id="sb-settings" onclick="showView('settings')">
+        <span class="si">⚙️</span> Settings
+      </div>
+    </div>
+    <div class="sb-footer">
+      <div class="sb-footer-user">
+        <div class="sb-avatar">A</div>
+        <div>
+          <div class="sb-uname">admin</div>
+          <div class="sb-urole">ETHICAL HACKER</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ══ REPORTS VIEW ══ -->
+    <div class="view active" id="view-reports">
+      <div class="ph">
+        <div class="ph-left">
+          <div class="ph-eyebrow">// complaints database</div>
+          <div class="ph-title">ALL REPORTS</div>
+          <div class="ph-sub" id="ph-sub">Loading…</div>
+        </div>
+        <div class="ph-actions">
+          <button class="ph-btn primary" onclick="exportCSV()">📤 Export CSV</button>
+          <button class="ph-btn" onclick="refreshData()">🔄 Refresh</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat"><div class="si-bg">📋</div><div class="sn" id="st-total">0</div><div class="sl">Total Reports</div></div>
+        <div class="stat red"><div class="si-bg">🔴</div><div class="sn" id="st-high">0</div><div class="sl">High Urgency</div></div>
+        <div class="stat cyan"><div class="si-bg">🔍</div><div class="sn" id="st-inv">0</div><div class="sl">Investigating</div></div>
+        <div class="stat" style="--accent:var(--green)"><div class="si-bg">✅</div><div class="sn" id="st-res">0</div><div class="sl">Resolved</div></div>
+        <div class="stat purple"><div class="si-bg">🆕</div><div class="sn" id="st-new">0</div><div class="sl">New / Unread</div></div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <button class="fchip on" onclick="setFilter('all',this)">All</button>
+        <button class="fchip" onclick="setFilter('cybercrime',this)">💻 Cyber</button>
+        <button class="fchip" onclick="setFilter('fraud',this)">💸 Fraud</button>
+        <button class="fchip" onclick="setFilter('harassment',this)">😰 Harass</button>
+        <button class="fchip" onclick="setFilter('stalking',this)">👁️ Stalking</button>
+        <button class="fchip" onclick="setFilter('data-theft',this)">🗂️ Data</button>
+        <button class="fchip" onclick="setFilter('other',this)">📌 Other</button>
+        <input class="search-box" type="text" id="search-box" placeholder="🔍 Search reports…" oninput="renderReports()">
+      </div>
+
+      <div class="report-list" id="report-list"></div>
+    </div>
+
+    <!-- ══ HIGH VIEW ══ -->
+    <div class="view" id="view-high">
+      <div class="ph"><div class="ph-left"><div class="ph-eyebrow">// priority queue</div><div class="ph-title">HIGH URGENCY</div><div class="ph-sub">Reports requiring immediate attention</div></div></div>
+      <div class="toolbar"><input class="search-box" style="margin-left:0" type="text" id="search-high" placeholder="🔍 Search…" oninput="renderList('high-list',getByUrgency('high'))"></div>
+      <div class="report-list" id="high-list"></div>
+    </div>
+
+    <!-- ══ NEW VIEW ══ -->
+    <div class="view" id="view-new">
+      <div class="ph"><div class="ph-left"><div class="ph-eyebrow">// inbox</div><div class="ph-title">NEW REPORTS</div><div class="ph-sub">Unread complaints awaiting triage</div></div></div>
+      <div class="report-list" id="new-list"></div>
+    </div>
+
+    <!-- ══ INVESTIGATING VIEW ══ -->
+    <div class="view" id="view-investigating">
+      <div class="ph"><div class="ph-left"><div class="ph-eyebrow">// active cases</div><div class="ph-title">INVESTIGATING</div><div class="ph-sub">Cases currently under investigation</div></div></div>
+      <div class="report-list" id="investigating-list"></div>
+    </div>
+
+    <!-- ══ RESOLVED VIEW ══ -->
+    <div class="view" id="view-resolved">
+      <div class="ph"><div class="ph-left"><div class="ph-eyebrow">// closed cases</div><div class="ph-title">RESOLVED</div><div class="ph-sub">Successfully closed cases</div></div></div>
+      <div class="report-list" id="resolved-list"></div>
+    </div>
+
+    <!-- ══ ANALYTICS VIEW ══ -->
+    <div class="view" id="view-analytics">
+      <div class="ph"><div class="ph-left"><div class="ph-eyebrow">// data insights</div><div class="ph-title">ANALYTICS</div><div class="ph-sub">Overview of complaint patterns</div></div></div>
+      <div class="analytics-grid" id="analytics-grid"></div>
+    </div>
+
+    <!-- ══ SETTINGS VIEW ══ -->
+    <div class="view" id="view-settings">
+      <div class="ph"><div class="ph-left"><div class="ph-eyebrow">// configuration</div><div class="ph-title">SETTINGS</div><div class="ph-sub">Manage admin credentials and preferences</div></div></div>
+
+      <div class="settings-card">
+        <h3>CHANGE PASSWORD</h3>
+        <div class="setting-row">
+          <div class="sr-info"><div class="sr-title">Current Password</div></div>
+          <div class="sr-right"><input class="setting-input" type="password" id="s-oldpass" placeholder="Current password…"></div>
+        </div>
+        <div class="setting-row">
+          <div class="sr-info"><div class="sr-title">New Password</div></div>
+          <div class="sr-right"><input class="setting-input" type="password" id="s-newpass" placeholder="New password (min 8 chars)…"></div>
+        </div>
+        <div class="setting-row">
+          <div class="sr-info"><div class="sr-title">Confirm New Password</div></div>
+          <div class="sr-right"><input class="setting-input" type="password" id="s-conpass" placeholder="Confirm new password…"></div>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;">
+          <button class="save-btn" onclick="changePassword()">💾 Save Password</button>
+          <div class="settings-msg" id="pw-msg"></div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h3>DATA MANAGEMENT</h3>
+        <div class="setting-row">
+          <div class="sr-info"><div class="sr-title">Export All Reports</div><div class="sr-sub">// Download as CSV file</div></div>
+          <div class="sr-right"><button class="save-btn" onclick="exportCSV()">📤 Export CSV</button></div>
+        </div>
+        <div class="setting-row">
+          <div class="sr-info"><div class="sr-title">Clear All Resolved Cases</div><div class="sr-sub">// Permanently remove resolved reports</div></div>
+          <div class="sr-right"><button class="danger-btn" onclick="clearResolved()">🗑️ Clear Resolved</button></div>
+        </div>
+        <div class="setting-row">
+          <div class="sr-info"><div class="sr-title">Factory Reset</div><div class="sr-sub">// Delete ALL reports permanently</div></div>
+          <div class="sr-right"><button class="danger-btn" onclick="factoryReset()">⚠️ Reset All Data</button></div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <h3>SYSTEM INFO</h3>
+        <div class="setting-row">
+          <div class="sr-info"><div class="sr-title">Version</div><div class="sr-sub">SafeHelp Admin Dashboard</div></div>
+          <div class="sr-right" style="font-family:var(--fm);font-size:.78rem;color:var(--green);">v2.0.0</div>
+        </div>
+        <div class="setting-row">
+          <div class="sr-info"><div class="sr-title">Total Reports Stored</div></div>
+          <div class="sr-right" style="font-family:var(--fm);font-size:.78rem;color:var(--cyan);" id="s-count">0</div>
+        </div>
+        <div class="setting-row">
+          <div class="sr-info"><div class="sr-title">Storage Used</div></div>
+          <div class="sr-right" style="font-family:var(--fm);font-size:.78rem;color:var(--muted);" id="s-storage">0 KB</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const STORE='sh_reports';
+const CREDS_KEY='sh_admin_creds';
+
+/* ── AUTH CHECK ── */
+if(!sessionStorage.getItem('sh_admin_auth')){ window.location.href='admin-login.html'; }
+
+/* ── CLOCK ── */
+function tick(){
+  const n=new Date();
+  document.getElementById('tb-clock').textContent=
+    n.toLocaleTimeString('en-IN',{hour12:false})+' IST';
+}
+tick(); setInterval(tick,1000);
+
+/* ── STORAGE ── */
+function getReports(){ try{return JSON.parse(localStorage.getItem(STORE)||'[]');}catch{return[];} }
+function saveReports(r){ localStorage.setItem(STORE,JSON.stringify(r)); }
+function getCreds(){ try{return JSON.parse(localStorage.getItem(CREDS_KEY)||'{"user":"admin","pass":"safehelp@777"}')}catch{return{user:'admin',pass:'safehelp@777'};} }
+function saveCreds(c){ localStorage.setItem(CREDS_KEY,JSON.stringify(c)); }
+
+/* ── NAVIGATION ── */
+let activeView='reports', filterActive='all';
+const viewIds=['reports','high','new','investigating','resolved','analytics','settings'];
+
+function showView(v){
+  activeView=v;
+  viewIds.forEach(id=>{
+    document.getElementById('view-'+id).classList.toggle('active',id===v);
+    const sb=document.getElementById('sb-'+id);
+    if(sb) sb.classList.toggle('active',id===v);
+  });
+  if(v==='reports') renderReports();
+  else if(v==='high') renderList('high-list',getByStatus(null,'high'));
+  else if(v==='new') renderList('new-list',getByStatus('new'));
+  else if(v==='investigating') renderList('investigating-list',getByStatus('investigating'));
+  else if(v==='resolved') renderList('resolved-list',getByStatus('resolved'));
+  else if(v==='analytics') renderAnalytics();
+  else if(v==='settings') renderSettings();
+}
+
+/* ── DATA HELPERS ── */
+function getByStatus(status,urgency){
+  let r=getReports();
+  if(status) r=r.filter(x=>x.status===status);
+  if(urgency) r=r.filter(x=>x.urgency===urgency);
+  return r;
+}
+function getByUrgency(u){ return getReports().filter(x=>x.urgency===u); }
+
+/* ── STATS ── */
+function refreshStats(){
+  const r=getReports();
+  document.getElementById('st-total').textContent=r.length;
+  document.getElementById('st-high').textContent=r.filter(x=>x.urgency==='high').length;
+  document.getElementById('st-inv').textContent=r.filter(x=>x.status==='investigating').length;
+  document.getElementById('st-res').textContent=r.filter(x=>x.status==='resolved').length;
+  document.getElementById('st-new').textContent=r.filter(x=>x.status==='new').length;
+  document.getElementById('sb-total-badge').textContent=r.length;
+  document.getElementById('sb-high-badge').textContent=r.filter(x=>x.urgency==='high').length;
+  document.getElementById('sb-new-badge').textContent=r.filter(x=>x.status==='new').length;
+  document.getElementById('sb-inv-badge').textContent=r.filter(x=>x.status==='investigating').length;
+  document.getElementById('sb-res-badge').textContent=r.filter(x=>x.status==='resolved').length;
+  document.getElementById('ph-sub').textContent=
+    r.length+' total · '+r.filter(x=>x.status==='new').length+' new · last updated '+new Date().toLocaleTimeString('en-IN');
+}
+
+/* ── FILTER ── */
+function setFilter(f,el){
+  filterActive=f;
+  document.querySelectorAll('.fchip').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  renderReports();
+}
+
+/* ── RENDER ── */
+function renderReports(){
+  let r=getReports();
+  const s=(document.getElementById('search-box')||{}).value||'';
+  if(filterActive!=='all') r=r.filter(x=>x.category===filterActive);
+  if(s.trim()) r=r.filter(x=>searchMatch(x,s));
+  renderList('report-list',r);
+}
+
+function renderList(containerId,reports){
+  const el=document.getElementById(containerId);
+  if(!el) return;
+  if(!reports.length){
+    el.innerHTML=`<div class="empty"><div class="ei">📭</div><h3>NO REPORTS</h3><p style="font-size:.78rem;">Nothing matches your filter.</p></div>`;
+    return;
+  }
+  const catLabel={cybercrime:'💻 CYBER',fraud:'💸 FRAUD',harassment:'😰 HARASS',stalking:'👁️ STALK','data-theft':'🗂️ DATA',other:'📌 OTHER'};
+  el.innerHTML=reports.map(r=>{
+    const d=new Date(r.timestamp).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const notesContent=r.notes||'';
+    return `
+    <div class="rc" id="rc-${r.ref}">
+      <div class="rc-top">
+        <div class="rc-badges">
+          <span class="badge b-ref">${r.ref}</span>
+          <span class="badge b-cat">${catLabel[r.category]||r.category}</span>
+          <span class="badge b-urg-${r.urgency}">${r.urgency.toUpperCase()}</span>
+          <span class="badge b-${r.status}">${r.status.toUpperCase()}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div class="rc-time">${d}</div>
+          <div class="rc-actions">
+            <button class="ra inv" onclick="changeStatus('${r.ref}','investigating')">🔍 Investigate</button>
+            <button class="ra res" onclick="changeStatus('${r.ref}','resolved')">✅ Resolve</button>
+            <button class="ra notes" onclick="toggleNotes('${r.ref}')">📝 Notes</button>
+            <button class="ra del" onclick="confirmDelete('${r.ref}')">🗑</button>
+          </div>
+        </div>
+      </div>
+      <div class="rc-desc">${esc(r.description)}</div>
+      <div class="rc-meta-row">
+        <div class="rm"><span class="rm-k">LOC:</span><span class="rm-v">${esc(r.location||'—')}</span></div>
+        <div class="rm"><span class="rm-k">WHEN:</span><span class="rm-v">${esc(r.when||'—')}</span></div>
+        ${r.suspect?`<div class="rm"><span class="rm-k">SUSPECT:</span><span class="rm-v">${esc(r.suspect)}</span></div>`:''}
+        <div class="rm"><span class="rm-k">REPORTER:</span><span class="rm-v">${esc(r.name||'Anonymous')}</span></div>
+        ${r.phone&&r.phone!=='HIDDEN'?`<div class="rm"><span class="rm-k">PHONE:</span><span class="rm-v">${esc(r.phone)}</span></div>`:''}
+        <div class="rm"><span class="rm-k">ANON:</span><span class="rm-v">${r.anonymous?'YES':'NO'}</span></div>
+      </div>
+      <div class="rc-notes-box ${notesContent?'show':''}" id="notes-${r.ref}">
+        <textarea class="rc-notes-input" id="ni-${r.ref}" placeholder="Add investigation notes here…">${notesContent}</textarea>
+        <button class="rc-notes-save" onclick="saveNotes('${r.ref}')">💾 Save Notes</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function searchMatch(r,s){
+  s=s.toLowerCase();
+  return [r.description,r.ref,r.category,r.location,r.name,r.suspect,r.phone,r.when]
+    .some(v=>(v||'').toLowerCase().includes(s));
+}
+
+/* ── ACTIONS ── */
+function changeStatus(ref,status){
+  const r=getReports(); const i=r.findIndex(x=>x.ref===ref);
+  if(i>-1){ r[i].status=status; saveReports(r); }
+  refreshStats(); renderReports();
+  showToast('Status updated → '+status.toUpperCase());
+  // Re-render other views
+  renderList('high-list',getByStatus(null,'high'));
+  renderList('new-list',getByStatus('new'));
+  renderList('investigating-list',getByStatus('investigating'));
+  renderList('resolved-list',getByStatus('resolved'));
+}
+
+function toggleNotes(ref){
+  const box=document.getElementById('notes-'+ref);
+  if(box) box.classList.toggle('show');
+}
+
+function saveNotes(ref){
+  const val=(document.getElementById('ni-'+ref)||{}).value||'';
+  const r=getReports(); const i=r.findIndex(x=>x.ref===ref);
+  if(i>-1){ r[i].notes=val; saveReports(r); }
+  showToast('Notes saved ✓');
+}
+
+let pendingDeleteRef=null;
+function confirmDelete(ref){
+  pendingDeleteRef=ref;
+  document.getElementById('del-modal').classList.add('show');
+  document.getElementById('modal-confirm-btn').onclick=()=>{
+    const r=getReports().filter(x=>x.ref!==ref);
+    saveReports(r); closeModal();
+    refreshStats(); renderReports();
+    renderList('high-list',getByStatus(null,'high'));
+    renderList('new-list',getByStatus('new'));
+    renderList('investigating-list',getByStatus('investigating'));
+    renderList('resolved-list',getByStatus('resolved'));
+    showToast('Report deleted.');
+  };
+}
+function closeModal(){ document.getElementById('del-modal').classList.remove('show'); pendingDeleteRef=null; }
+
+/* ── ANALYTICS ── */
+function renderAnalytics(){
+  const r=getReports();
+  if(!r.length){
+    document.getElementById('analytics-grid').innerHTML='<div class="empty"><div class="ei">📊</div><h3>NO DATA YET</h3></div>';
+    return;
+  }
+  const cats={cybercrime:0,fraud:0,harassment:0,stalking:0,'data-theft':0,other:0};
+  const urgs={low:0,medium:0,high:0};
+  const stats={new:0,investigating:0,resolved:0};
+  r.forEach(x=>{
+    if(cats[x.category]!==undefined) cats[x.category]++;
+    if(urgs[x.urgency]!==undefined) urgs[x.urgency]++;
+    if(stats[x.status]!==undefined) stats[x.status]++;
+  });
+  const max=v=>Math.max(...Object.values(v),1);
+  const bars=(obj,colors,labels)=>Object.entries(obj).map(([k,v])=>`
+    <div class="bar-row">
+      <div class="bar-lbl">${labels[k]||k}</div>
+      <div class="bar-track"><div class="bar-fill ${colors[k]||''}" style="width:${v/max(obj)*100}%"></div></div>
+      <div class="bar-num">${v}</div>
+    </div>`).join('');
+
+  document.getElementById('analytics-grid').innerHTML=`
+    <div class="analytic-card">
+      <h4>// By Category</h4>
+      ${bars(cats,{cybercrime:'',fraud:'cyan',harassment:'red','stalking':'purple','data-theft':'amber',other:''},{'cybercrime':'💻 CYBER','fraud':'💸 FRAUD','harassment':'😰 HARASS','stalking':'👁️ STALK','data-theft':'🗂️ DATA','other':'📌 OTHER'})}
+    </div>
+    <div class="analytic-card">
+      <h4>// By Urgency</h4>
+      ${bars(urgs,{low:'',medium:'amber',high:'red'},{low:'🟢 LOW',medium:'🟡 MEDIUM',high:'🔴 HIGH'})}
+    </div>
+    <div class="analytic-card">
+      <h4>// By Status</h4>
+      ${bars(stats,{new:'cyan',investigating:'amber',resolved:''},{'new':'🆕 NEW','investigating':'🔍 INVEST.','resolved':'✅ RESOLVED'})}
+    </div>
+    <div class="analytic-card">
+      <h4>// Quick Numbers</h4>
+      <div class="bar-row"><div class="bar-lbl">Total</div><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><div class="bar-num">${r.length}</div></div>
+      <div class="bar-row"><div class="bar-lbl">Anonymous</div><div class="bar-track"><div class="bar-fill cyan" style="width:${r.filter(x=>x.anonymous).length/r.length*100}%"></div></div><div class="bar-num">${r.filter(x=>x.anonymous).length}</div></div>
+      <div class="bar-row"><div class="bar-lbl">With Suspect</div><div class="bar-track"><div class="bar-fill amber" style="width:${r.filter(x=>x.suspect).length/r.length*100}%"></div></div><div class="bar-num">${r.filter(x=>x.suspect).length}</div></div>
+    </div>`;
+}
+
+/* ── SETTINGS ── */
+function renderSettings(){
+  const r=getReports();
+  document.getElementById('s-count').textContent=r.length;
+  const bytes=new Blob([JSON.stringify(r)]).size;
+  document.getElementById('s-storage').textContent=(bytes/1024).toFixed(2)+' KB';
+}
+
+function changePassword(){
+  const old=document.getElementById('s-oldpass').value;
+  const np=document.getElementById('s-newpass').value;
+  const cp=document.getElementById('s-conpass').value;
+  const msg=document.getElementById('pw-msg');
+  const creds=getCreds();
+  if(old!==creds.pass){ msg.style.color='var(--red)'; msg.textContent='⚠️ Current password is wrong.'; return; }
+  if(np.length<8){ msg.style.color='var(--red)'; msg.textContent='⚠️ Min 8 characters.'; return; }
+  if(np!==cp){ msg.style.color='var(--red)'; msg.textContent='⚠️ Passwords do not match.'; return; }
+  saveCreds({user:creds.user,pass:np});
+  msg.style.color='var(--green)'; msg.textContent='✓ Password updated!';
+  ['s-oldpass','s-newpass','s-conpass'].forEach(id=>document.getElementById(id).value='');
+  setTimeout(()=>msg.textContent='',3000);
+  showToast('Password changed successfully.');
+}
+
+function clearResolved(){
+  if(!confirm('Delete all resolved reports permanently?')) return;
+  const r=getReports().filter(x=>x.status!=='resolved');
+  saveReports(r); refreshStats(); renderReports(); renderSettings();
+  showToast('Resolved reports cleared.');
+}
+
+function factoryReset(){
+  if(!confirm('⚠️ This will DELETE ALL REPORTS permanently. Type "yes" to confirm.')) return;
+  const v=prompt('Type YES to confirm factory reset:');
+  if(v!=='YES') return;
+  localStorage.removeItem(STORE);
+  refreshStats(); renderReports(); renderSettings();
+  showToast('All data cleared.');
+}
+
+/* ── EXPORT ── */
+function exportCSV(){
+  const r=getReports();
+  if(!r.length){ showToast('No reports to export.'); return; }
+  const h=['Ref','Timestamp','Category','Urgency','Status','Location','When','Description','Suspect','Reporter','Phone','City','Anonymous','Notes'];
+  const rows=r.map(x=>[
+    x.ref,x.timestamp,x.category,x.urgency,x.status,
+    x.location,x.when,'"'+(x.description||'').replace(/"/g,'""')+'"',
+    x.suspect||'',x.name||'',x.phone||'',x.city||'',
+    x.anonymous?'YES':'NO','"'+(x.notes||'').replace(/"/g,'""')+'"'
+  ].join(','));
+  const csv=[h.join(','),...rows].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='safehelp_reports_'+Date.now()+'.csv';
+  a.click();
+  showToast('CSV exported ✓');
+}
+
+/* ── TOAST ── */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+/* ── LOGOUT ── */
+function doLogout(){
+  sessionStorage.removeItem('sh_admin_auth');
+  sessionStorage.removeItem('sh_admin_time');
+  window.location.href='admin-login.html';
+}
+
+/* ── REFRESH ── */
+function refreshData(){ refreshStats(); renderReports(); showToast('Data refreshed.'); }
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ── INIT ── */
+refreshStats();
+renderReports();
+
+// Close modal on backdrop click
+document.getElementById('del-modal').addEventListener('click',function(e){ if(e.target===this) closeModal(); });
+
+// Auto-refresh every 30s
+setInterval(()=>{ refreshStats(); if(activeView==='reports') renderReports(); }, 30000);
+</script>
+</body>
+</html>
